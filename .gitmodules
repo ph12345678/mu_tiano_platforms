@@ -18,3 +18,7 @@
 	path = Common/PRM
 	url = https://github.com/tianocore/edk2-staging.git
 	branch = PlatformRuntimeMechanism
+	branch = release/202002
+[submodule "SBManage"]
+	path = SBManage
+	url = https://brbarkel@dev.azure.com/brbarkel/Rust/_git/secure-boot-manager

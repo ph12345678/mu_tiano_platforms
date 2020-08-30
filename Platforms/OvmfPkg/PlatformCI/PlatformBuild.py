@@ -213,10 +213,23 @@ class PlatformBuilder( UefiBuilder, BuildSettingsManager):
     def PlatformPostBuild(self):
         return 0
 
+    def BuildRustApp(self):
+      app_path = os.path.join(self.ws, "SBManage")
+      cmd = "cargo"
+      params = ("+nightly", "xbuild", "--target", "x86_64-unknown-uefi", "--manifest-path", os.path.join(app_path, "Cargo.toml"))
+      ret = RunCmd(cmd, " ".join(params))
+      result_path = os.path.join(app_path, "target")
+      return app_path
+
     def FlashRomImage(self):
         VirtualDrive = os.path.join(self.env.GetValue("BUILD_OUTPUT_BASE"), "VirtualDrive")
         os.makedirs(VirtualDrive, exist_ok=True)
         OutputPath_FV = os.path.join(self.env.GetValue("BUILD_OUTPUT_BASE"), "FV")
+
+        # Build the test app and copy to the VirtualDrive.
+        app_path = self.BuildRustApp()
+        print(app_path)
+        return 0
 
         #
         # QEMU must be on the path
