@@ -218,8 +218,8 @@ class PlatformBuilder( UefiBuilder, BuildSettingsManager):
       cmd = "cargo"
       params = ("+nightly", "xbuild", "--target", "x86_64-unknown-uefi", "--manifest-path", os.path.join(app_path, "Cargo.toml"))
       ret = RunCmd(cmd, " ".join(params))
-      result_path = os.path.join(app_path, "target")
-      return app_path
+      result_path = os.path.join(app_path, "target", "x86_64-unknown-uefi", "debug", "secure-boot-manager.efi")
+      return result_path if ret == 0 else None
 
     def FlashRomImage(self):
         VirtualDrive = os.path.join(self.env.GetValue("BUILD_OUTPUT_BASE"), "VirtualDrive")
@@ -229,8 +229,10 @@ class PlatformBuilder( UefiBuilder, BuildSettingsManager):
         # Build the test app and copy to the VirtualDrive.
         app_path = self.BuildRustApp()
         print(app_path)
-        return 0
-
+        if app_path is None:
+          return -1
+        shutil.copy(app_path, VirtualDrive)
+        
         #
         # QEMU must be on the path
         #
