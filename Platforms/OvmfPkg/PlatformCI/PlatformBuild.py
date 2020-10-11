@@ -216,8 +216,8 @@ class PlatformBuilder( UefiBuilder, BuildSettingsManager):
     def BuildRustApp(self):
       app_path = os.path.join(self.ws, "SBManage")
       cmd = "cargo"
-      params = ("+nightly", "build", "-Zbuild-std=core,alloc", "--target",
-                "x86_64-unknown-uefi", "--manifest-path", os.path.join(app_path, "Cargo.toml"))
+      params = ("+nightly", "build", "-Z", "build-std=core,alloc", "-Z", "build-std-features=compiler-builtins-mem",
+                "--target", "x86_64-unknown-uefi", "--manifest-path", os.path.join(app_path, "Cargo.toml"))
       ret = RunCmd(cmd, " ".join(params))
       result_path = os.path.join(app_path, "target", "x86_64-unknown-uefi", "debug", "secure-boot-manager.efi")
       return result_path if ret == 0 else None
