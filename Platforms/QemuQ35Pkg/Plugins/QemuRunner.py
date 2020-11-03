@@ -33,6 +33,15 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
         obj.Register("QemuRun", QemuRunner.Runner, fp)
         return 0
 
+    def BuildRustApp(self):
+        app_path = os.path.join(self.ws, "SBManage")
+        cmd = "cargo"
+        params = ("+nightly", "build", "-Z", "build-std=core,alloc", "-Z", "build-std-features=compiler-builtins-mem",
+                    "--target", "x86_64-unknown-uefi", "--manifest-path", os.path.join(app_path, "Cargo.toml"))
+        ret = RunCmd(cmd, " ".join(params))
+        result_path = os.path.join(app_path, "target", "x86_64-unknown-uefi", "debug", "secure-boot-manager.efi")
+        return result_path if ret == 0 else None
+
     @staticmethod
     def Runner(env):
         ''' Runs QEMU '''
@@ -45,6 +54,18 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
 
         os.makedirs(VirtualDrive, exist_ok=True)
         OutputPath_FV = os.path.join(env.GetValue("BUILD_OUTPUT_BASE"), "FV")
+
+        app_path = os.path.join(env.GetValue("WORKSPACE"), "SBManage")
+        cmd = "cargo"
+        params = ("+nightly", "build", "-Z", "build-std=core,alloc", "-Z", "build-std-features=compiler-builtins-mem",
+                    "--target", "x86_64-unknown-uefi", "--manifest-path", os.path.join(app_path, "Cargo.toml"))
+        ret = utility_functions.RunCmd(cmd, " ".join(params))
+        result_path = os.path.join(app_path, "target", "x86_64-unknown-uefi", "debug", "secure-boot-manager.efi")
+        app_path = result_path if ret == 0 else None
+        print(app_path)
+        if app_path is None:
+            return -1
+        shutil.copy(app_path, VirtualDrive)
 
         # Check if QEMU is on the path, if not find it
         executable = "qemu-system-x86_64"
