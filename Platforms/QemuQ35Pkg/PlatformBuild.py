@@ -210,7 +210,21 @@ class PlatformBuilder( UefiBuilder, BuildSettingsManager):
     def PlatformPostBuild(self):
         return 0
 
-    def FlashRomImage(self):
+    def BuildRustApp(self):
+        app_path = os.path.join(self.ws, "SBManage")
+        cmd = "cargo"
+        params = ("+nightly", "build", "-Z", "build-std=core,alloc", "-Z", "build-std-features=compiler-builtins-mem",
+                    "--target", "x86_64-unknown-uefi", "--manifest-path", os.path.join(app_path, "Cargo.toml"))
+        ret = RunCmd(cmd, " ".join(params))
+        result_path = os.path.join(app_path, "target", "x86_64-unknown-uefi", "debug", "secure-boot-manager.efi")
+        return result_path if ret == 0 else None
+
+    def FlashRomImage(self):        # Build the test app and copy to the VirtualDrive.
+        app_path = self.BuildRustApp()
+        print(app_path)
+        if app_path is None:
+            return -1
+        shutil.copy(app_path, VirtualDrive)
         return self.Helper.QemuRun(self.env)
 
 if __name__ == "__main__":
